@@ -1,0 +1,29 @@
+application {
+    color: aqua;
+}
+
+.docker-container-button {
+    border-radius: 5px;
+    fill: none;
+    border: 2px solid aqua;
+    flex: 0 0 20%;
+    padding: 10px;
+    margin: 5px;
+    transition: color 0.5s, background-color 0.5s;
+}
+
+.docker-container-button:hover {
+    background-color: aqua;
+    color: black;
+    cursor: pointer;
+}
+
+.docker-container-list {
+    flex-wrap: wrap;
+    display: flex;
+}
+
+.docker-alert {
+    margin: auto;
+    width: 50%;
+}

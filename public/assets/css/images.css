@@ -1,0 +1,35 @@
+.docker-image-list {
+    flex-wrap: wrap;
+    display: flex;
+}
+
+.docker-image-button {
+    border-radius: 5px;
+    fill: none;
+    border: 2px solid aqua;
+    flex: 0 0 20%;
+    padding: 10px;
+    margin: 5px;
+    transition: color 0.5s, background-color 0.5s;
+}
+
+.docker-image-new-button {
+    border: 1px solid aqua;
+    width: 50%;
+    padding: 10px;
+    margin: 20px auto 40px;
+    transition: 0.5s;
+    border-radius: 5px;
+}
+
+.docker-image-new-button:hover {
+    cursor: pointer;
+    background-color: #00FF00;
+    color: black;
+}
+
+.docker-image-button:hover {
+    background-color: aqua;
+    color: black;
+    cursor: pointer;
+}
