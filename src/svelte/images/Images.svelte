@@ -9,6 +9,11 @@
     updateImages()
     let imageUpdater = setInterval(updateImages, 1000)
     onDestroy(() => clearInterval(imageUpdater))
+
+
+    function openAddImageMenu() {
+
+    }
 </script>
 <div class="docker-image-new-button">Add a new image</div>
 {#if !images}

@@ -10,7 +10,7 @@ use bollard::{API_DEFAULT_VERSION, Docker};
 use bollard::container::ListContainersOptions;
 use bollard::errors::Error;
 
-use bollard::image::ListImagesOptions;
+use bollard::image::{BuildImageOptions, ListImagesOptions};
 use bollard::models::{ContainerSummary, ImageSummary};
 use serde_json::{json, Value};
 use tauri::{State};
@@ -78,5 +78,13 @@ fn check_docker_errors(err: Error) -> Value {
         }
     }
 }
-async fn install_docker_image() {
+
+#[tauri::command]
+async fn install_docker_image_from_repo(conn_state: State<'_, Connection>, repo: String, name_tag: String) {
+    let docker: Docker = conn_state.0.lock().unwrap().deref().clone();
+    let options = BuildImageOptions {
+        t: name_tag,
+        ..Default::default()
+    };
+    //docker.import_image(options);
 }
