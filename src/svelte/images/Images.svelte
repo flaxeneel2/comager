@@ -10,7 +10,7 @@
     let imageUpdater = setInterval(updateImages, 1000)
     onDestroy(() => clearInterval(imageUpdater))
 
-
+    //TODO: actually implement the add image menu popup
     function openAddImageMenu() {
 
     }
