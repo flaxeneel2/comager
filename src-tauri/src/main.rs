@@ -9,6 +9,7 @@ use std::sync::Mutex;
 use bollard::{API_DEFAULT_VERSION, Docker};
 use bollard::container::ListContainersOptions;
 use bollard::errors::Error;
+use futures::stream::StreamExt;
 
 use bollard::image::{BuildImageOptions, ListImagesOptions};
 use bollard::models::{ContainerSummary, ImageSummary};
@@ -25,14 +26,14 @@ struct ConnectionDetails {
 fn main() {
     tauri::Builder::default()
         .manage(Connection(Mutex::new(create_docker_connection())))
-        .invoke_handler(tauri::generate_handler![get_docker_containers, get_docker_images])
+        .invoke_handler(tauri::generate_handler![get_docker_containers, get_docker_images, install_docker_image_from_repo])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 
 }
 
 fn create_docker_connection() -> Docker {
-    Docker::connect_with_http("http://localhost:16385", 4, API_DEFAULT_VERSION).unwrap()
+    Docker::connect_with_http("http://localhost:16384", 4, API_DEFAULT_VERSION).unwrap()
 }
 
 fn update_docker_connection_details() {
@@ -80,11 +81,20 @@ fn check_docker_errors(err: Error) -> Value {
 }
 
 #[tauri::command]
-async fn install_docker_image_from_repo(conn_state: State<'_, Connection>, repo: String, name_tag: String) {
+async fn install_docker_image_from_repo(conn_state: State<'_, Connection>, _repo: String, name_tag: String) ->  Result<bool, Value> {
+    println!("{}", "Called!");
     let docker: Docker = conn_state.0.lock().unwrap().deref().clone();
     let options = BuildImageOptions {
         t: name_tag,
+        pull: true,
         ..Default::default()
     };
-    //docker.import_image(options);
+    let stream_unchecked = docker.build_image(options, None, None).collect::<Vec<_>>().await;
+    for val in stream_unchecked {
+        match val {
+            Ok(ans) => println!("{:?}", ans),
+            Err(err) => println!("{:?}", err)
+        }
+    }
+    Ok(true)
 }

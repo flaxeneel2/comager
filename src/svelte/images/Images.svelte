@@ -4,7 +4,6 @@
     import { onDestroy } from 'svelte';
     async function updateImages() {
         images = await invoke("get_docker_images").catch((err) => images = err);
-        console.log(images)
     }
     updateImages()
     let imageUpdater = setInterval(updateImages, 1000)
@@ -12,10 +11,18 @@
 
     //TODO: actually implement the add image menu popup
     function openAddImageMenu() {
+    }
 
+    async function addImageTemp() {
+        let btn = document.getElementById("addImage")
+        btn.innerHTML = "Adding image..."
+        await invoke("install_docker_image_from_repo", { repo: "Hi", nameTag: "debian:latest" })
+        btn.innerHTML = "Image added!"
+        await new Promise(resolve => setTimeout(resolve, 10000))
+        btn.innerHTML = "Add a new image"
     }
 </script>
-<div class="docker-image-new-button">Add a new image</div>
+<div id="addImage" class="docker-image-new-button" on:click={() => addImageTemp()}>Add a new image</div>
 {#if !images}
     <p>Loading images...</p>
 {:else if (images.error)}
