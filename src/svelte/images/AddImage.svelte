@@ -1,5 +1,22 @@
 <script>
-    export let message = 'Hi';
+    import { getContext } from 'svelte';
+    export let onOkay = () => {};
+    export let onClose = () => {};
+    let onChange = () => {}
+    let { close } = getContext("simple-modal")
+    let value;
+    function _onCancel() {
+        onClose();
+        close();
+    }
+
+    function _onOkay() {
+        onOkay(value);
+        close();
+    }
+
+
+    $: onChange(value)
 </script>
 
-<p>🎉 {message} 🍾</p>
+<input type="text" bind:value on:keydown={e => e.which === 13 && _onOkay()} />

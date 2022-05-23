@@ -3,6 +3,7 @@
     import { invoke } from '@tauri-apps/api/tauri'
     import { onDestroy, getContext } from 'svelte';
     import AddImage from "./AddImage.svelte"
+    import { fly } from "svelte/transition";
     let { open } = getContext("simple-modal")
 
     async function updateImages() {
@@ -13,11 +14,31 @@
     onDestroy(() => clearInterval(imageUpdater))
 
     //TODO: actually implement the add image menu popup
+    let onOkay = async (image) => {
+        let btn = document.getElementById("addImage")
+        btn.innerHTML = "Adding image..."
+        await invoke("install_docker_image_from_repo", { repo: "Hi", imageName: image })
+        btn.innerHTML = "Image added!"
+        await new Promise(resolve => setTimeout(resolve, 10000))
+        btn.innerHTML = "Add a new image"
+    }
+    let onClose = async () => {
+        let btn = document.getElementById("addImage")
+        btn.innerHTML = "Action cancelled!"
+        await new Promise(resolve => setTimeout(resolve, 10000))
+        btn.innerHTML = "Add a new image"
+    }
     function openAddImageMenu() {
         open(
             AddImage,
+            onOkay,
+            onClose,
             {
-                message: "haha no"
+                transitionWindow: fly,
+                transitionWindowProps: {
+                    y: 100,
+                    duration: 1000
+                },
             }
         )
     }
@@ -31,7 +52,7 @@
         btn.innerHTML = "Add a new image"
     }
 </script>
-<div id="addImage" class="docker-image-new-button" on:click={() => openAddImageMenu()}>Add a new image</div>
+<div id="addImage" class="docker-image-new-button" on:click={openAddImageMenu}>Add a new image</div>
 {#if !images}
     <p>Loading images...</p>
 {:else if (images.error)}

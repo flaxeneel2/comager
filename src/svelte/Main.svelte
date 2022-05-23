@@ -8,12 +8,13 @@
     import Containers from "./Containers.svelte";
     import Images from "./images/Images.svelte";
     import Modal from 'svelte-simple-modal';
+    import {writable} from "svelte/store";
     let pages = PAGES.HOME
     let images;
-
+    let modal = writable(null)
 </script>
 <Navbar bind:page={pages}/>
-<Modal>
+<Modal show={$modal}>
     <application>
         {#if pages === PAGES.HOME}
             <Home/>
