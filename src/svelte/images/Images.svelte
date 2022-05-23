@@ -1,7 +1,10 @@
 <script lang="ts">
     let images;
     import { invoke } from '@tauri-apps/api/tauri'
-    import { onDestroy } from 'svelte';
+    import { onDestroy, getContext } from 'svelte';
+    import AddImage from "./AddImage.svelte"
+    let { open } = getContext("simple-modal")
+
     async function updateImages() {
         images = await invoke("get_docker_images").catch((err) => images = err);
     }
@@ -11,6 +14,12 @@
 
     //TODO: actually implement the add image menu popup
     function openAddImageMenu() {
+        open(
+            AddImage,
+            {
+                message: "haha no"
+            }
+        )
     }
 
     async function addImageTemp() {
@@ -22,7 +31,7 @@
         btn.innerHTML = "Add a new image"
     }
 </script>
-<div id="addImage" class="docker-image-new-button" on:click={() => addImageTemp()}>Add a new image</div>
+<div id="addImage" class="docker-image-new-button" on:click={() => openAddImageMenu()}>Add a new image</div>
 {#if !images}
     <p>Loading images...</p>
 {:else if (images.error)}

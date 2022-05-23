@@ -13,14 +13,16 @@
 
 </script>
 <Navbar bind:page={pages}/>
-<application>
-    {#if pages === PAGES.HOME}
-        <Home/>
-    {:else if pages === PAGES.CONTAINER}
-        <ManageContainer/>
-    {:else if pages === PAGES.CONTAINERS}
-        <Containers/>
-    {:else if pages === PAGES.IMAGES}
-        <Images/>
-    {/if}
-</application>
+<Modal>
+    <application>
+        {#if pages === PAGES.HOME}
+            <Home/>
+        {:else if pages === PAGES.CONTAINER}
+            <ManageContainer/>
+        {:else if pages === PAGES.CONTAINERS}
+            <Containers/>
+        {:else if pages === PAGES.IMAGES}
+            <Images/>
+        {/if}
+    </application>
+</Modal>
