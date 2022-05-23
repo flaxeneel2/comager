@@ -16,7 +16,7 @@
     async function addImageTemp() {
         let btn = document.getElementById("addImage")
         btn.innerHTML = "Adding image..."
-        await invoke("install_docker_image_from_repo", { repo: "Hi", nameTag: "debian:latest" })
+        await invoke("install_docker_image_from_repo", { repo: "Hi", imageName: "debian:latest" })
         btn.innerHTML = "Image added!"
         await new Promise(resolve => setTimeout(resolve, 10000))
         btn.innerHTML = "Add a new image"

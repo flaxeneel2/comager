@@ -7,6 +7,7 @@
     import ManageContainer from "./ManageContainer.svelte";
     import Containers from "./Containers.svelte";
     import Images from "./images/Images.svelte";
+    import Modal from 'svelte-simple-modal';
     let pages = PAGES.HOME
     let images;
 

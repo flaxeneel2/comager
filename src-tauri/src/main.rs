@@ -11,7 +11,7 @@ use bollard::container::ListContainersOptions;
 use bollard::errors::Error;
 use futures::stream::StreamExt;
 
-use bollard::image::{BuildImageOptions, ListImagesOptions};
+use bollard::image::{CreateImageOptions, ListImagesOptions};
 use bollard::models::{ContainerSummary, ImageSummary};
 use serde_json::{json, Value};
 use tauri::{State};
@@ -81,20 +81,16 @@ fn check_docker_errors(err: Error) -> Value {
 }
 
 #[tauri::command]
-async fn install_docker_image_from_repo(conn_state: State<'_, Connection>, _repo: String, name_tag: String) ->  Result<bool, Value> {
-    println!("{}", "Called!");
+async fn install_docker_image_from_repo(conn_state: State<'_, Connection>, image_name: String) ->  Result<bool, Value> {
+    println!("Called!");
     let docker: Docker = conn_state.0.lock().unwrap().deref().clone();
-    let options = BuildImageOptions {
-        t: name_tag,
-        pull: true,
+    let create_image_opts = CreateImageOptions {
+        from_image: image_name,
         ..Default::default()
     };
-    let stream_unchecked = docker.build_image(options, None, None).collect::<Vec<_>>().await;
+    let stream_unchecked = docker.create_image(Some(create_image_opts), None, None).collect::<Vec<_>>().await;
     for val in stream_unchecked {
-        match val {
-            Ok(ans) => println!("{:?}", ans),
-            Err(err) => println!("{:?}", err)
-        }
+        println!("{:?}", val)
     }
     Ok(true)
 }
