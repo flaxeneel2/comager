@@ -11,6 +11,8 @@
     }
 
     function _onOkay() {
+        console.log(value)
+        console.log(onOkay)
         onOkay(value);
         close();
     }

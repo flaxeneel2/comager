@@ -15,6 +15,7 @@
 
     //TODO: actually implement the add image menu popup
     let onOkay = async (image) => {
+        console.log("called!")
         let btn = document.getElementById("addImage")
         btn.innerHTML = "Adding image..."
         await invoke("install_docker_image_from_repo", { repo: "Hi", imageName: image })
@@ -31,8 +32,10 @@
     function openAddImageMenu() {
         open(
             AddImage,
-            onOkay,
-            onClose,
+            {
+                onOkay,
+                onClose
+            },
             {
                 transitionWindow: fly,
                 transitionWindowProps: {
