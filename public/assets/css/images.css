@@ -20,6 +20,7 @@
     margin: 20px auto 40px;
     transition: 0.5s;
     border-radius: 5px;
+    text-align: center;
 }
 
 .docker-image-new-button:hover {
@@ -32,4 +33,14 @@
     background-color: aqua;
     color: black;
     cursor: pointer;
+}
+
+.import-image-header {
+    color: aqua;
+}
+
+.import-image-textbox {
+    border-color: aqua;
+    background-color: #22468f;
+    color: aqua;
 }

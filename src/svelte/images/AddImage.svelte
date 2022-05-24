@@ -11,8 +11,6 @@
     }
 
     function _onOkay() {
-        console.log(value)
-        console.log(onOkay)
         onOkay(value);
         close();
     }
@@ -21,4 +19,7 @@
     $: onChange(value)
 </script>
 
-<input type="text" bind:value on:keydown={e => e.which === 13 && _onOkay()} />
+<div>
+    <h3 class="import-image-header">Import image options</h3>
+    <input class="import-image-textbox" placeholder="debian:latest" type="text" bind:value on:keydown={e => e.which === 13 && _onOkay()} />
+</div>
