@@ -1,0 +1,8 @@
+.connect-dropdown-selection {
+    --background: #001853;
+    --borderRadius: 2px;
+    --border: 1px solid aqua;
+    --margin: 0 25% 0 25%;
+    --listBackground: #555;
+    --itemHoverBG: #001853;
+}
