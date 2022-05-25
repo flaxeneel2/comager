@@ -4,8 +4,8 @@
     export let containers: any[]
     import Navbar from "./Navbar.svelte";
     import Home from "./Home.svelte"
-    import ManageContainer from "./ManageContainer.svelte";
-    import Containers from "./Containers.svelte";
+    import ManageContainer from "./Containers/ManageContainer.svelte";
+    import Containers from "./Containers/Containers.svelte";
     import Images from "./images/Images.svelte";
     import Modal from 'svelte-simple-modal';
     import {writable} from "svelte/store";

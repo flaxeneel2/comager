@@ -10,7 +10,7 @@
         images = await invoke("get_docker_images").catch((err) => images = err);
     }
     updateImages()
-    let imageUpdater = setInterval(updateImages, 1000)
+    let imageUpdater = setInterval(updateImages, 5000)
     onDestroy(() => clearInterval(imageUpdater))
 
     //TODO: actually implement the add image menu popup
@@ -39,7 +39,7 @@
             {
                 styleWindow: {
                     border: '2px solid #fff',
-                    background: '#002066'
+                    background: '#001853'
                 },
                 transitionWindow: fly,
                 transitionWindowProps: {
