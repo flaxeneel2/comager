@@ -37,7 +37,7 @@
 </script>
 
 <div>
-    <h3 class="import-image-header">New connection details</h3>
+    <h3>New connection details</h3>
     <div class="connect-dropdown-selection">
         <Select items={connTypes}/>
     </div>

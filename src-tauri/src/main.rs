@@ -14,7 +14,7 @@ use futures::stream::StreamExt;
 use bollard::image::{CreateImageOptions, ListImagesOptions};
 use bollard::models::{ContainerSummary, ImageSummary};
 use serde_json::{json, Value};
-use tauri::{State};
+use tauri::{AppHandle, Manager, State};
 
 struct Connection(Mutex<Docker>);
 
@@ -81,16 +81,24 @@ fn check_docker_errors(err: Error) -> Value {
 }
 
 #[tauri::command]
-async fn install_docker_image_from_repo(conn_state: State<'_, Connection>, image_name: String) ->  Result<bool, Value> {
+async fn install_docker_image_from_repo(conn_state: State<'_, Connection>, image_name: String, app_handle: AppHandle) ->  Result<bool, Value> {
     println!("Called!");
     let docker: Docker = conn_state.0.lock().unwrap().deref().clone();
     let create_image_opts = CreateImageOptions {
         from_image: image_name,
         ..Default::default()
     };
-    let stream_unchecked = docker.create_image(Some(create_image_opts), None, None).collect::<Vec<_>>().await;
-    for val in stream_unchecked {
-        println!("{:?}", val)
+    let mut stream_unchecked = docker.create_image(Some(create_image_opts), None, None);
+    while let Some(item) = stream_unchecked.next().await {
+        match item {
+            Ok(data) => {
+                app_handle.app_handle().emit_all("hi", data).expect("TODO: panic message");
+            },
+            Err(err) => {
+                app_handle.emit_all("image-download-error", check_docker_errors(err)).expect("ERRORED WHILE ERRORING");
+                break
+            }
+        }
     }
     Ok(true)
 }

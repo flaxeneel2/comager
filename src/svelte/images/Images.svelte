@@ -1,6 +1,7 @@
 <script lang="ts">
     let images;
     import { invoke } from '@tauri-apps/api/tauri'
+    import { listen } from "@tauri-apps/api/event"
     import { onDestroy, getContext } from 'svelte';
     import AddImage from "./AddImage.svelte"
     import { fly } from "svelte/transition";
@@ -10,12 +11,15 @@
         images = await invoke("get_docker_images").catch((err) => images = err);
     }
     updateImages()
-    let imageUpdater = setInterval(updateImages, 5000)
+    let imageUpdater = setInterval(updateImages, 1000)
     onDestroy(() => clearInterval(imageUpdater))
 
     //TODO: actually implement the add image menu popup
     let onOkay = async (image) => {
         console.log("called!")
+        let listener = listen("hi", event => {
+            console.log(event.payload)
+        })
         let btn = document.getElementById("addImage")
         btn.innerHTML = "Adding image..."
         await invoke("install_docker_image_from_repo", { repo: "Hi", imageName: image })
