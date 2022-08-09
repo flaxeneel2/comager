@@ -1,0 +1,14 @@
+.menu > * {
+    display: inline-block;
+}
+.burger-button {
+    height: 10px;
+    width: 40px;
+}
+
+.menu .burger-button p {
+    font-size: 30px;
+    cursor: pointer;
+    user-select: none;
+}
+
