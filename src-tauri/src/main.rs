@@ -56,6 +56,24 @@ async fn get_docker_daemon_info(conn: State<'_, Connection>) -> Result<SystemInf
     }
 }
 
+#[tauri::command]
+async fn get_docker_daemon_info(conn: State<'_, Connection>) -> Result<Images, Value> {
+    let docker_option: Option<Docker> = conn.0.lock().unwrap().deref().clone();
+    if docker_option.is_none() {
+        Err(json!({"error":"No docker connection!"}))
+    } else {
+        let info = docker_option.unwrap().info().await;
+        match info {
+            Ok(sys_info) => {
+                Ok(sys_info)
+            },
+            Err(error) => {
+                Err(check_docker_errors(error))
+            }
+        }
+    }
+}
+
 fn check_docker_errors(err: Error) -> Value {
     return match err {
         Error::DockerResponseServerError { status_code, message } => json!({"error": "DOCKER_RESPONSE_SERVER_ERROR", "status_code": status_code, "error_msg": message}),
