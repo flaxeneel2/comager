@@ -1,5 +1,8 @@
 <script lang="ts">
     import DockerInfoManager from "../assets/ts/DockerInfoManager";
+    import { getContext } from 'svelte';
+    import ConnectionModal from "./NewConnectionModal.svelte"
+    const { open } = getContext("simple-modal");
     let fieldMessage = "Loading..."
     window.onload = () => {
         let dockerInfoManager = new DockerInfoManager();
@@ -12,9 +15,37 @@
             } else fieldMessage = e.detail.error
         })
     }
+
+    function cancelNewConnection() {
+
+    }
+
+    function reconnectWithNewConnection() {
+
+    }
+
+    function newConnection() {
+        open(
+            ConnectionModal,
+            {
+                cancelNewConnection,
+                reconnectWithNewConnection
+            },
+            {
+                styleWindow: {
+                    border: "3px solid #454545",
+                    backgroundColor: "#1a1a1a",
+                    color: "aliceblue"
+                }
+            }
+        )
+    }
 </script>
 
 <div>
+    <div class="connect btn" on:click={newConnection}>
+        Connect to a docker daemon
+    </div>
     <div class="highlights">
         <div class="gray box">
             <h3>Kernel</h3>

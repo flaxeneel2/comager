@@ -14,6 +14,23 @@
     padding-left: 10px;
 }
 
+.connect {
+    text-align: center;
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: 20px;
+    padding: 20px;
+    border: 3px #454545 solid;
+    border-radius: 5px;
+    width: 50%;
+    transition: 0.1s;
+}
+
+.connect:hover {
+    background-color: #454545;
+    color: #ffffff;
+}
+
 .box h3 {
     text-align: center;
 }

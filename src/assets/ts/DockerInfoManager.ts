@@ -7,7 +7,6 @@ export default class DockerInfoManager extends EventTarget {
         super();
     }
     async updateFields() {
-        console.log("hi")
         let dockerData: DockerData;
         await invoke("get_docker_daemon_info")
             .then((d: DockerData) => dockerData = d)

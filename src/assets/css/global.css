@@ -4,3 +4,8 @@
 body {
     background-color: #1a1a1a;
 }
+
+.btn {
+    user-select: none;
+    cursor: pointer;
+}

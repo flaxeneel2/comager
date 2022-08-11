@@ -1,3 +1,6 @@
+<script>
+
+</script>
 <div>
     <p>
         This is the images page
