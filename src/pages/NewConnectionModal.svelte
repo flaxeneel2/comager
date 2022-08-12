@@ -18,12 +18,14 @@
     let selection = "";
 </script>
 
-<h1 style="text-align: center">New Connection</h1>
-<h3>Connection type</h3>
-<select value={'selection'} style="width: 50%">
-    {#each options as option}
-        <option value={option}>
-            {option.text}
-        </option>
-    {/each}
-</select>
+<div class="modal">
+    <h1 style="text-align: center">New Connection</h1>
+    <h3>Connection type</h3>
+    <select value={'selection'} style="width: 50%">
+        {#each options as option}
+            <option value={option.id}>
+                {option.text}
+            </option>
+        {/each}
+    </select>
+</div>

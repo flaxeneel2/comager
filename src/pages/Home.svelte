@@ -1,5 +1,6 @@
 <script lang="ts">
     import DockerInfoManager from "../assets/ts/DockerInfoManager";
+    import modalUtil from "../lib/util/modals"
     import { getContext } from 'svelte';
     import ConnectionModal from "./NewConnectionModal.svelte"
     const { open } = getContext("simple-modal");
@@ -31,13 +32,15 @@
                 cancelNewConnection,
                 reconnectWithNewConnection
             },
+            modalUtil.getDarkThemeStyle()
+            /*
             {
                 styleWindow: {
                     border: "3px solid #454545",
                     backgroundColor: "#1a1a1a",
                     color: "aliceblue"
                 }
-            }
+            }*/
         )
     }
 </script>
