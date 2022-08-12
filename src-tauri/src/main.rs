@@ -75,9 +75,8 @@ async fn get_docker_images(conn: State<'_, Connection>) -> Result<Vec<ImageSumma
         Err(e) => { Err(check_docker_errors(e)) }
     }
 }
-/*
 
- */
+
 fn check_docker_errors(err: Error) -> Value {
     return match err {
         Error::DockerResponseServerError { status_code, message } => json!({"error": "DOCKER_RESPONSE_SERVER_ERROR", "status_code": status_code, "error_msg": message}),

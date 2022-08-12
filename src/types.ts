@@ -12,3 +12,8 @@ export interface DockerData {
     SwapLimit: string,
     IPv4Forwarding: string
 }
+
+export interface FetchError {
+    error: string,
+    error_msg?: string
+}

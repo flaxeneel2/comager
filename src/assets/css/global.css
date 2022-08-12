@@ -14,3 +14,16 @@ body {
     background-color: #1a1a1a;
     color: aliceblue;
 }
+
+.modal input {
+    display: inline-block;
+    background-color: #1a1a1a;
+    color: aliceblue;
+    border-radius: 5px;
+    border: 1px solid #454545;
+    float: right;
+}
+
+.modal .field {
+    padding-bottom: 5px;
+}
