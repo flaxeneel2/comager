@@ -1,0 +1,17 @@
+.banner {
+    border-radius: 5px;
+    padding: 10px 30px;
+    text-align: center;
+}
+
+.error {
+    border: 1px solid red;
+}
+
+.progress {
+    border: 1px solid yellow;
+}
+
+.success {
+    border: 1px solid green;
+}

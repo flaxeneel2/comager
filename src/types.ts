@@ -13,7 +13,7 @@ export interface DockerData {
     IPv4Forwarding: string
 }
 
-export interface FetchError {
+export interface DockerError {
     error: string,
     error_msg?: string
 }

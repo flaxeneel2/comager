@@ -3,7 +3,7 @@
     import modalUtil from "../lib/util/modals"
     import { getContext } from 'svelte';
     import ConnectionModal from "./NewConnectionModal.svelte"
-    import type {FetchError} from "../types";
+    import type {DockerError} from "../types";
     const { open } = getContext("simple-modal");
     let fieldMessage = "Loading..."
     window.onload = () => {
@@ -11,7 +11,7 @@
         dockerInfoManager.updateFieldsPeriodically();
         dockerInfoManager.addEventListener("infoFetchError", (e: CustomEvent) => {
             console.log(`Encountered error!`)
-            let detail: FetchError = e.detail
+            let detail: DockerError = e.detail
             console.log(detail)
             if(detail.error_msg) {
                 fieldMessage = detail.error_msg
@@ -23,14 +23,6 @@
             ConnectionModal,
             {},
             modalUtil.getDarkThemeStyle()
-            /*
-            {
-                styleWindow: {
-                    border: "3px solid #454545",
-                    backgroundColor: "#1a1a1a",
-                    color: "aliceblue"
-                }
-            }*/
         )
     }
 </script>
