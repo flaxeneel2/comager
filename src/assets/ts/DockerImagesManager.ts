@@ -39,6 +39,15 @@ export default class DockerImagesManager extends EventTarget {
     }
 
     /**
+     * Add an image by it's name (or repository link)
+     * @param imageName
+     * @param uniqueId
+     */
+    addImageByName(imageName, uniqueId) {
+        return invoke("add_docker_image_by_name", {imageName: imageName, uniqueId: uniqueId})
+    }
+
+    /**
      * Update images every second
      */
     async updateImagesPeriodically() {

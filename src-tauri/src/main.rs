@@ -8,14 +8,17 @@ use std::path::Path;
 use std::sync::Mutex;
 use bollard::{API_DEFAULT_VERSION, Docker};
 use bollard::errors::Error;
-use bollard::image::{ListImagesOptions, RemoveImageOptions};
+use bollard::image::{CreateImageOptions, ListImagesOptions, RemoveImageOptions};
 use bollard::models::{ImageDeleteResponseItem, ImageSummary, SystemInfo};
-use tauri::State;
+use tauri::{AppHandle, Manager, State};
 use serde_json::{json, Value};
 use tauri::api::dialog::blocking::FileDialogBuilder;
+use futures::stream::StreamExt;
 
+/// The Connection state. This will be used to store an existing connection.
 struct Connection(Mutex<Option<Docker>>);
 
+/// The main function. All the commands must be registered here
 fn main() {
     tauri::Builder::default()
         .manage(Connection(Mutex::new(None)))
@@ -24,6 +27,7 @@ fn main() {
             create_docker_socket_connection,
             create_docker_http_connection,
             create_docker_ssl_connection,
+            add_docker_image_by_name,
             get_docker_daemon_info,
             delete_docker_image,
             get_docker_images
@@ -126,6 +130,11 @@ async fn check_docker_connection_details(connection: Result<Docker, Error>, conn
     }
 }
 
+/// Get the information about the docker daemon and the host
+///
+/// # Arguments
+/// * `conn` - The global connection state.
+///
 #[tauri::command]
 async fn get_docker_daemon_info(conn: State<'_, Connection>) -> Result<SystemInfo, Value> {
     let docker_option: Option<Docker> = conn.0.lock().unwrap().deref().clone();
@@ -141,6 +150,44 @@ async fn get_docker_daemon_info(conn: State<'_, Connection>) -> Result<SystemInf
                 Err(check_docker_errors(error))
             }
         }
+    }
+}
+
+/// Add a new image by name.
+/// It can be from any repository, whether official or unofficial, as long as it returns a valid image.
+///
+/// # Arguments
+/// * `conn` - The connection state.
+/// * `app_handle` - The app handle for tauri
+/// * `image_name` - The name of the image to be deleted.
+/// * `unique_id` - The unique ID to broadcast to
+///
+#[tauri::command]
+async fn add_docker_image_by_name(conn: State<'_, Connection>, app_handle: AppHandle, image_name: &str, unique_id: &str) -> Result<(), Value> {
+    let docker_option: Option<Docker> = conn.0.lock().unwrap().deref().clone();
+    if docker_option.is_none() {
+        Err(json!({"error":"No docker connection!"}))
+    } else {
+        let docker = docker_option.unwrap();
+        let mut stream = docker.create_image(
+            Some(CreateImageOptions {
+                from_image: image_name,
+                ..Default::default()
+            }),
+            None,
+            None
+        );
+        while let Some(item) = stream.next().await {
+            match item {
+                Ok(data) => {
+                    app_handle.app_handle().emit_all(unique_id, data).expect("TODO: panic message");
+                },
+                Err(err) => {
+                    return Err(check_docker_errors(err));
+                }
+            }
+        }
+        Ok(())
     }
 }
 
@@ -175,6 +222,11 @@ async fn delete_docker_image(conn: State<'_, Connection>, image_name: &str, forc
     }
 }
 
+/// Get the images currently installed on the docker daemon
+///
+/// # Arguments
+/// * `conn` - The global connection state
+///
 #[tauri::command]
 async fn get_docker_images(conn: State<'_, Connection>) -> Result<Vec<ImageSummary>, Value> {
     let docker_option: Option<Docker> = conn.0.lock().unwrap().deref().clone();
@@ -210,7 +262,10 @@ async fn open_file_selection_and_get_file_path(filter_name: String, extensions: 
     }
 }
 
-
+/// Check bollard errors and convert then to JSON so they can be sent to the frontend
+///
+/// # Arguments
+/// * `err` - The error to check
 fn check_docker_errors(err: Error) -> Value {
     return match err {
         Error::DockerResponseServerError { status_code, message } => json!({"error": "DOCKER_RESPONSE_SERVER_ERROR", "status_code": status_code, "error_msg": message}),

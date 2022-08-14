@@ -4,6 +4,7 @@
     import DeleteImageConfirmationModal from "./DeleteImageConfirmationModal.svelte";
     import modals from "../../lib/util/modals";
     import util from "../../lib/util/functions"
+    import AddImageModal from "./AddImageModal.svelte";
     let images;
     let error = "";
     let dockerImagesManager = new DockerImagesManager();
@@ -41,9 +42,18 @@
             modals.getDarkThemeStyle()
         )
     }
+    function openAddImageModal() {
+        open(
+            AddImageModal,
+            {
+                dockerImagesManager: dockerImagesManager
+            },
+            modals.getDarkThemeStyle()
+        )
+    }
 </script>
 <div>
-    <div class="add-image btn">
+    <div class="add-image btn" on:click={openAddImageModal}>
         Add a new image
     </div>
     {#if !images && error === ""}
@@ -59,7 +69,7 @@
             There are no images! Add an image by pressing the button above!
         </div>
     {:else}
-        <div class="highlights">
+        <div class="images">
             {#each images as image}
                 <div class="gray box">
                     <h3>{image.RepoTags[0]}</h3>

@@ -24,4 +24,17 @@ export default {
         let nodes = path.replaceAll("\\", "/").split("/")
         return nodes[nodes.length-1] || "No file selected."
     },
+
+    /**
+     * Generate a random string
+     * @param stringLength The length of the string to generate
+     */
+    generateRandomString(stringLength) {
+        let characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        let returner = ""
+        for(let index = 0; index<stringLength; index++) {
+            returner += characters[Math.floor(Math.random() * characters.length)]
+        }
+        return returner
+    }
 }
