@@ -47,11 +47,16 @@ export default class DockerContainersManager extends EventTarget {
 
     /**
      * Create a new container
-     * @param containerName
-     * @param uniqueId
+     * @param creationDetails
      */
-    createContainer(containerName, uniqueId) {
-
+    createContainer(creationDetails) {
+        return invoke("create_docker_container", {
+            name: creationDetails.name,
+            cpuPercentageLimit: (creationDetails.cpuPercentageLimit || 0),
+            image: creationDetails.image,
+            memoryLimit: ((creationDetails.memoryLimit*1024)*1024 || 0),
+            command: creationDetails.command
+        });
     }
 
     /**

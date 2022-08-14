@@ -4,6 +4,7 @@
     import modals from "../../lib/util/modals"
     import DeleteContainerConfirmationModal from "./DeleteContainerConfirmationModal.svelte";
     import CreateContainerModal from "./CreateContainerModal.svelte";
+    import ContainerDetails from "./ContainerDetails.svelte";
     let containers;
     let error = "";
     let dockerContainersManager = new DockerContainersManager();
@@ -49,6 +50,15 @@
             modals.getDarkThemeStyle()
         )
     }
+    function openContainerDetailsModal() {
+        open(
+            ContainerDetails,
+            {
+                dockerContainersManager: dockerContainersManager
+            },
+            modals.getDarkThemeStyle()
+        )
+    }
 </script>
 <div>
     <div class="add-image btn" on:click={openCreateContainerModal}>
@@ -74,6 +84,8 @@
                     <p>Names: {container.Names.join(", ")}</p>
                     <p>Creation Date: {new Date(container.Created*1000).toString()}</p>
                     <p>Image: {container.Image}</p>
+                    <p>Status: {container.Status}</p>
+                    <p>Commands: {container.Command}</p>
                     <div class="container-details btn" on:click={() => openDeletionConfirmation(container.Id)}>
                         View Details
                     </div>

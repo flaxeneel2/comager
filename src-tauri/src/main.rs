@@ -7,10 +7,10 @@ use std::ops::Deref;
 use std::path::Path;
 use std::sync::Mutex;
 use bollard::{API_DEFAULT_VERSION, Docker};
-use bollard::container::{ListContainersOptions, RemoveContainerOptions};
+use bollard::container::{Config, CreateContainerOptions, ListContainersOptions, RemoveContainerOptions};
 use bollard::errors::Error;
 use bollard::image::{CreateImageOptions, ListImagesOptions, RemoveImageOptions};
-use bollard::models::{ContainerSummary, ImageDeleteResponseItem, ImageSummary, SystemInfo};
+use bollard::models::{ContainerCreateResponse, ContainerSummary, HostConfig, ImageDeleteResponseItem, ImageSummary, SystemInfo};
 use tauri::{AppHandle, Manager, State};
 use serde_json::{json, Value};
 use tauri::api::dialog::blocking::FileDialogBuilder;
@@ -30,6 +30,7 @@ fn main() {
             create_docker_ssl_connection,
             add_docker_image_by_name,
             delete_docker_container,
+            create_docker_container,
             get_docker_daemon_info,
             get_docker_containers,
             delete_docker_image,
@@ -323,6 +324,60 @@ async fn delete_docker_container(conn: State<'_, Connection>,
         }
     }
 }
+
+/// Create a new docker container
+///
+/// # Arguments
+/// * `conn` - The connection state.
+/// * `name` - The name of the container
+/// * `image` - The image to create the container from
+/// * `cpu_percentage_limit` - CPU percentage limit.
+/// * `memory_limit` - Memory the container is allowed to use
+///
+#[tauri::command]
+async fn create_docker_container(conn: State<'_, Connection>,
+                                 name: &str,
+                                 image: &str,
+                                 cpu_percentage_limit: i64,
+                                 memory_limit: i64
+) -> Result<ContainerCreateResponse, Value> {
+    let docker_option: Option<Docker> = conn.0.lock().unwrap().deref().clone();
+    if docker_option.is_none() {
+        Err(json!({"error":"No docker connection!"}))
+    } else {
+        let docker = docker_option.unwrap();
+        let host_config: Option<HostConfig> = Some(HostConfig {
+            cpu_percent: Some(cpu_percentage_limit),
+            memory: Some(memory_limit),
+            ..Default::default()
+        });
+        let config = Config {
+            host_config,
+            image: Some(image),
+
+            ..Default::default()
+        };
+        let create_container_options = CreateContainerOptions {
+            name,
+            ..Default::default()
+        };
+        match docker.create_container(Some(create_container_options), config).await {
+            Ok(container_created) => {
+                Ok(container_created)
+            },
+            Err(e) => {
+                Err(check_docker_errors(e))
+            }
+        }
+    }
+}
+/*
+name: creationDetails.name,
+            cpuPercentageLimit: creationDetails.cpuPercentageLimit,
+            image: creationDetails.image,
+            memoryLimit: creationDetails.memoryLimit,
+            command: creationDetails.command
+ */
 
 /// Check bollard errors and convert then to JSON so they can be sent to the frontend
 ///

@@ -31,6 +31,7 @@
             errorMessage = "The container is already deleted!"
             return;
         }
+        deleted = true
         await dockerContainersManager.deleteContainer(
             containerId,
             (force.toString() === "true"),
