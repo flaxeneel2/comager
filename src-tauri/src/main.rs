@@ -7,9 +7,10 @@ use std::ops::Deref;
 use std::path::Path;
 use std::sync::Mutex;
 use bollard::{API_DEFAULT_VERSION, Docker};
+use bollard::container::{ListContainersOptions, RemoveContainerOptions};
 use bollard::errors::Error;
 use bollard::image::{CreateImageOptions, ListImagesOptions, RemoveImageOptions};
-use bollard::models::{ImageDeleteResponseItem, ImageSummary, SystemInfo};
+use bollard::models::{ContainerSummary, ImageDeleteResponseItem, ImageSummary, SystemInfo};
 use tauri::{AppHandle, Manager, State};
 use serde_json::{json, Value};
 use tauri::api::dialog::blocking::FileDialogBuilder;
@@ -28,7 +29,9 @@ fn main() {
             create_docker_http_connection,
             create_docker_ssl_connection,
             add_docker_image_by_name,
+            delete_docker_container,
             get_docker_daemon_info,
+            get_docker_containers,
             delete_docker_image,
             get_docker_images
         ])
@@ -262,10 +265,70 @@ async fn open_file_selection_and_get_file_path(filter_name: String, extensions: 
     }
 }
 
+/// Get the containers currently installed on the docker daemon
+///
+/// # Arguments
+/// * `conn` - The global connection state
+///
+#[tauri::command]
+async fn get_docker_containers(conn: State<'_, Connection>) -> Result<Vec<ContainerSummary>, Value> {
+    let docker_option: Option<Docker> = conn.0.lock().unwrap().deref().clone();
+    if docker_option.is_none() {
+        return Err(json!({"error":"No docker connection!"}))
+    }
+    let docker = docker_option.unwrap();
+    match docker.list_containers(Some(ListContainersOptions::<String> {
+        all: true,
+        ..Default::default()
+    })).await {
+        Ok(containers) => { Ok(containers) }
+        Err(e) => { Err(check_docker_errors(e)) }
+    }
+}
+
+/// Delete a given container
+///
+/// # Arguments
+/// * `conn` - The connection state.
+/// * `container_id` - The id of the container to be deleted.
+/// * `force` - Whether the container should be force deleted or not. (If container is running, it is killed and then deleted)
+/// * `volumes` - Whether the volumes linked to the container should be deleted too
+/// * `links` - Whether links should be deleted too.
+///
+#[tauri::command]
+async fn delete_docker_container(conn: State<'_, Connection>,
+                                 container_id: &str,
+                                 force: bool,
+                                 volumes: bool,
+                                 links: bool
+) -> Result<(), Value> {
+    let docker_option: Option<Docker> = conn.0.lock().unwrap().deref().clone();
+    if docker_option.is_none() {
+        Err(json!({"error":"No docker connection!"}))
+    } else {
+        let delete_response = docker_option.unwrap().remove_container(
+            container_id,
+            Some(RemoveContainerOptions {
+                force,
+                v: volumes,
+                link: links,
+            })
+        ).await;
+        match delete_response {
+            Ok(_) => {
+                Ok(())
+            },
+            Err(err) =>
+                Err(check_docker_errors(err))
+        }
+    }
+}
+
 /// Check bollard errors and convert then to JSON so they can be sent to the frontend
 ///
 /// # Arguments
 /// * `err` - The error to check
+///
 fn check_docker_errors(err: Error) -> Value {
     return match err {
         Error::DockerResponseServerError { status_code, message } => json!({"error": "DOCKER_RESPONSE_SERVER_ERROR", "status_code": status_code, "error_msg": message}),

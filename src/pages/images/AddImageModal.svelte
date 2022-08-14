@@ -56,7 +56,7 @@
 </script>
 
 <div class="modal">
-    <h2 style="text-align: center">Delete Image</h2>
+    <h2 style="text-align: center">Add Image</h2>
     {#if errorMessage !== ""}
         <div class="highlight error">
             <p>{errorMessage}</p>
@@ -74,7 +74,7 @@
             <p>{successMessage}</p>
         </div>
     {/if}
-    <p>Deletions are permanent and cannot be undone.</p>
+    <p>Both official and unofficial repositories are supported, but for unofficial repositories, the full link is required</p>
     <div class="field">
         <label>
             Image

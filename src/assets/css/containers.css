@@ -1,0 +1,12 @@
+.box .container-details {
+    background-color: #454545;
+    border: 2px solid #1a1a1a;
+    color: white;
+    float: left;
+    position: relative;
+    bottom: 2px;
+    left: 2px;
+    padding-left: 5px;
+    padding-right: 5px;
+    border-radius: 5px;
+}

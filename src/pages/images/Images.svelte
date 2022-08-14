@@ -22,7 +22,6 @@
         /* Handle updates */
         dockerImagesManager.addEventListener("imagesFetchSuccess", (event) => {
             images = event.detail
-            console.log(images)
         })
     })
 

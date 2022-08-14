@@ -63,7 +63,7 @@
     <div class="field">
         <label>
             Force delete
-            <input type="checkbox" bind:value={force}>
+            <input type="checkbox" bind:checked={force}>
         </label>
     </div>
     <div class="btn delete-button" on:click={deleteImage}>
