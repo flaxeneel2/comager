@@ -8,8 +8,8 @@ use std::path::Path;
 use std::sync::Mutex;
 use bollard::{API_DEFAULT_VERSION, Docker};
 use bollard::errors::Error;
-use bollard::image::ListImagesOptions;
-use bollard::models::{ImageSummary, SystemInfo};
+use bollard::image::{ListImagesOptions, RemoveImageOptions};
+use bollard::models::{ImageDeleteResponseItem, ImageSummary, SystemInfo};
 use tauri::State;
 use serde_json::{json, Value};
 use tauri::api::dialog::blocking::FileDialogBuilder;
@@ -139,6 +139,30 @@ async fn get_docker_daemon_info(conn: State<'_, Connection>) -> Result<SystemInf
             Err(error) => {
                 Err(check_docker_errors(error))
             }
+        }
+    }
+}
+
+#[tauri::command]
+async fn delete_docker_image(conn: State<'_, Connection>, image_name: &str) -> Result<Vec<ImageDeleteResponseItem>, Value> {
+    let docker_option: Option<Docker> = conn.0.lock().unwrap().deref().clone();
+    if docker_option.is_none() {
+        Err(json!({"error":"No docker connection!"}))
+    } else {
+        let delete_response = docker_option.unwrap().remove_image(
+            image_name,
+            Some(RemoveImageOptions {
+                force: true,
+                ..Default::default()
+            }),
+            None
+        ).await;
+        match delete_response {
+            Ok(idri) => {
+                Ok(idri)
+            },
+            Err(err) =>
+            Err(check_docker_errors(err))
         }
     }
 }

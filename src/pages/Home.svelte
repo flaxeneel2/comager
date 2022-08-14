@@ -1,23 +1,24 @@
 <script lang="ts">
     import DockerInfoManager from "../assets/ts/DockerInfoManager";
     import modalUtil from "../lib/util/modals"
-    import { getContext } from 'svelte';
+    import {onMount,onDestroy,getContext} from "svelte";
     import ConnectionModal from "./NewConnectionModal.svelte"
     import type {DockerError} from "../types";
     const { open } = getContext("simple-modal");
     let fieldMessage = "Loading..."
-    window.onload = () => {
-        let dockerInfoManager = new DockerInfoManager();
+    let dockerInfoManager = new DockerInfoManager();
+    onMount(() => {
         dockerInfoManager.updateFieldsPeriodically();
         dockerInfoManager.addEventListener("infoFetchError", (e: CustomEvent) => {
-            console.log(`Encountered error!`)
             let detail: DockerError = e.detail
-            console.log(detail)
             if(detail.error_msg) {
                 fieldMessage = detail.error_msg
             } else fieldMessage = detail.error
         })
-    }
+    })
+    onDestroy(() => {
+        dockerInfoManager.unload();
+    })
     function newConnection() {
         open(
             ConnectionModal,
