@@ -1,7 +1,9 @@
 <script>
     import DockerImagesManager from "../../assets/ts/DockerImagesManager";
-    import {onMount,onDestroy} from "svelte";
-    import * as types from "../../types"
+    import {onMount,onDestroy,getContext} from "svelte";
+    import DeleteImageConfirmationModal from "./DeleteImageConfirmationModal.svelte";
+    import modals from "../../lib/util/modals";
+    import util from "../../lib/util/functions"
     let images;
     let error = "";
     let dockerImagesManager = new DockerImagesManager();
@@ -27,8 +29,23 @@
         dockerImagesManager.unload();
     })
 
+    const { open } = getContext("simple-modal")
+
+    function openDeletionConfirmation(imageName) {
+        open(
+            DeleteImageConfirmationModal,
+            {
+                dockerImagesManager: dockerImagesManager,
+                imageName: imageName
+            },
+            modals.getDarkThemeStyle()
+        )
+    }
 </script>
 <div>
+    <div class="add-image btn">
+        Add a new image
+    </div>
     {#if !images && error === ""}
         <div class="banner progress">
             Loading images
@@ -48,7 +65,11 @@
                     <h3>{image.RepoTags[0]}</h3>
                     <p>ID: {image.Id.split(":")[1].slice(0, 12)}</p>
                     <p>Number of containers: {image.Containers === -1 ? "0" : image.Containers}</p>
-                    <p>Size: {dockerImagesManager.resolveSizeToHighestUnit(image.Size)}</p>
+                    <p>Creation Date: {new Date(image.Created*1000).toString()}</p>
+                    <p>Size: {util.resolveSizeToHighestUnit(image.Size)}</p>
+                    <div class="trash btn" on:click={() => openDeletionConfirmation(image.RepoTags[0])}>
+                        Delete
+                    </div>
                 </div>
             {/each}
         </div>

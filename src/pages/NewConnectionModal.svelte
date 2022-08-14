@@ -1,5 +1,6 @@
 <script>
     import {invoke} from "@tauri-apps/api/tauri";
+    import util from "../lib/util/functions"
 
     let options = [
         {
@@ -154,15 +155,6 @@
             })
     }
 
-    /**
-     * Get file name from path
-     * @param path
-     * @returns {string|string}
-     */
-    function getFileFromPath(path) {
-        let nodes = path.replaceAll("\\", "/").split("/")
-        return nodes[nodes.length-1] || "No file selected."
-    }
 </script>
 
 <div class="modal">
@@ -228,7 +220,7 @@
             </label>
         </div>
         <div class="field">
-            SSL Key ({connectionDetails.sslKey ? getFileFromPath(connectionDetails.sslKey) : "No file selected."})
+            SSL Key ({connectionDetails.sslKey ? util.getFileFromPath(connectionDetails.sslKey) : "No file selected."})
             <div class="btn" style="float: right" on:click={ () => handleFileSelection(
                 "Key Files",
                 [
@@ -243,7 +235,7 @@
             )}>Select File</div>
         </div>
         <div class="field">
-            SSL certificate ({connectionDetails.sslCert ? getFileFromPath(connectionDetails.sslCert) : "No file selected."})
+            SSL certificate ({connectionDetails.sslCert ? util.getFileFromPath(connectionDetails.sslCert) : "No file selected."})
             <div class="btn" style="float: right" on:click={ () => handleFileSelection(
                 "Certificate",
                 [
@@ -261,7 +253,7 @@
             )}>Select File</div>
         </div>
         <div class="field">
-            SSL CA ({connectionDetails.sslCa ? getFileFromPath(connectionDetails.sslCa) : "No file selected."})
+            SSL CA ({connectionDetails.sslCa ? util.getFileFromPath(connectionDetails.sslCa) : "No file selected."})
             <div class="btn" style="float: right" on:click={ () => handleFileSelection(
                 "CA files",
                 [

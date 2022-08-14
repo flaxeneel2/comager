@@ -27,20 +27,15 @@ export default class DockerImagesManager extends EventTarget {
         clearInterval(this.loop)
     }
 
+
     /**
-     * Convert bytes to highest possible unit that is still above 1 of the unit
-     * @param size - Size of image in bytes.
+     * Delete an image. Returns a promise that must be awaited.
+     * @param imageName
+     * @param force
+     * @returns Promise
      */
-    resolveSizeToHighestUnit(size: number) {
-        let units = ["B", "KiB", "MiB", "GiB", "TiB", "PiB"]
-        let returner = `${size}B`
-        let iteration = 0
-        do {
-            iteration++
-            size = size/1024
-            returner = `${size.toFixed(2)}${units[iteration]}`
-        } while(Math.floor(size/1024)!==0)
-        return returner
+    deleteImage(imageName, force) {
+        return invoke("delete_docker_image", { imageName: imageName,  force: force})
     }
 
     /**

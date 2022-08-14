@@ -25,6 +25,7 @@ fn main() {
             create_docker_http_connection,
             create_docker_ssl_connection,
             get_docker_daemon_info,
+            delete_docker_image,
             get_docker_images
         ])
         .run(tauri::generate_context!())
@@ -143,8 +144,15 @@ async fn get_docker_daemon_info(conn: State<'_, Connection>) -> Result<SystemInf
     }
 }
 
+/// Delete a given image
+///
+/// # Arguments
+/// * `conn` - The connection state.
+/// * `image_name` - The name of the image to be deleted.
+/// * `force` - Whether the image should be force deleted or not.
+///
 #[tauri::command]
-async fn delete_docker_image(conn: State<'_, Connection>, image_name: &str) -> Result<Vec<ImageDeleteResponseItem>, Value> {
+async fn delete_docker_image(conn: State<'_, Connection>, image_name: &str, force: bool) -> Result<Vec<ImageDeleteResponseItem>, Value> {
     let docker_option: Option<Docker> = conn.0.lock().unwrap().deref().clone();
     if docker_option.is_none() {
         Err(json!({"error":"No docker connection!"}))
@@ -152,14 +160,14 @@ async fn delete_docker_image(conn: State<'_, Connection>, image_name: &str) -> R
         let delete_response = docker_option.unwrap().remove_image(
             image_name,
             Some(RemoveImageOptions {
-                force: true,
+                force,
                 ..Default::default()
             }),
             None
         ).await;
         match delete_response {
-            Ok(idri) => {
-                Ok(idri)
+            Ok(image_delete_responses) => {
+                Ok(image_delete_responses)
             },
             Err(err) =>
             Err(check_docker_errors(err))
