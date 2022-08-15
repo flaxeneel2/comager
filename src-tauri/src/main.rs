@@ -5,16 +5,21 @@
 
 use std::ops::Deref;
 use std::path::Path;
-use std::sync::Mutex;
+
+use std::sync::{Mutex};
+use std::sync::mpsc::channel;
 use bollard::{API_DEFAULT_VERSION, Docker};
-use bollard::container::{Config, CreateContainerOptions, ListContainersOptions, RemoveContainerOptions};
+use bollard::container::{AttachContainerOptions, Config, CreateContainerOptions, InspectContainerOptions, ListContainersOptions, RemoveContainerOptions, RestartContainerOptions, StartContainerOptions, StopContainerOptions};
 use bollard::errors::Error;
 use bollard::image::{CreateImageOptions, ListImagesOptions, RemoveImageOptions};
-use bollard::models::{ContainerCreateResponse, ContainerSummary, HostConfig, ImageDeleteResponseItem, ImageSummary, SystemInfo};
+use bollard::models::{ContainerCreateResponse, ContainerInspectResponse, ContainerSummary, HostConfig, ImageDeleteResponseItem, ImageSummary, SystemInfo};
+
 use tauri::{AppHandle, Manager, State};
 use serde_json::{json, Value};
 use tauri::api::dialog::blocking::FileDialogBuilder;
 use futures::stream::StreamExt;
+use tokio::io::AsyncWriteExt;
+
 
 /// The Connection state. This will be used to store an existing connection.
 struct Connection(Mutex<Option<Docker>>);
@@ -26,12 +31,17 @@ fn main() {
         .invoke_handler(tauri::generate_handler![
             open_file_selection_and_get_file_path,
             create_docker_socket_connection,
+            set_container_up_for_live_stdio,
             create_docker_http_connection,
             create_docker_ssl_connection,
+            get_docker_container_details,
             add_docker_image_by_name,
+            restart_docker_container,
             delete_docker_container,
             create_docker_container,
+            start_docker_container,
             get_docker_daemon_info,
+            stop_docker_container,
             get_docker_containers,
             delete_docker_image,
             get_docker_images
@@ -287,6 +297,26 @@ async fn get_docker_containers(conn: State<'_, Connection>) -> Result<Vec<Contai
     }
 }
 
+/// Get the container details from daemon
+///
+/// # Arguments
+/// * `conn` - The global connection state
+///
+#[tauri::command]
+async fn get_docker_container_details(conn: State<'_, Connection>, container_id: &str) -> Result<ContainerInspectResponse, Value> {
+    let docker_option: Option<Docker> = conn.0.lock().unwrap().deref().clone();
+    if docker_option.is_none() {
+        return Err(json!({"error":"No docker connection!"}))
+    }
+    let docker = docker_option.unwrap();
+    match docker.inspect_container(container_id, Some(InspectContainerOptions {
+        size: false
+    })).await {
+        Ok(container_info) => { Ok(container_info) }
+        Err(e) => { Err(check_docker_errors(e)) }
+    }
+}
+
 /// Delete a given container
 ///
 /// # Arguments
@@ -347,7 +377,7 @@ async fn create_docker_container(conn: State<'_, Connection>,
     } else {
         let docker = docker_option.unwrap();
         let host_config: Option<HostConfig> = Some(HostConfig {
-            cpu_percent: Some(cpu_percentage_limit),
+            nano_cpus: Some(cpu_percentage_limit*10000000),
             memory: Some(memory_limit),
             ..Default::default()
         });
@@ -371,14 +401,154 @@ async fn create_docker_container(conn: State<'_, Connection>,
         }
     }
 }
-/*
-name: creationDetails.name,
-            cpuPercentageLimit: creationDetails.cpuPercentageLimit,
-            image: creationDetails.image,
-            memoryLimit: creationDetails.memoryLimit,
-            command: creationDetails.command
- */
 
+///
+/// Register a container for stdio.
+///
+/// # Arguments
+/// * `conn` - The connection state
+/// * `app_handle` - The handle for the app
+/// * `container_id` - The container ID to register
+/// * `unique_id` - The ID for the listeners
+#[tauri::command]
+async fn set_container_up_for_live_stdio(conn: State<'_, Connection>,
+                                         app_handle: AppHandle,
+                                         container_id: &str,
+                                         unique_id: &str
+) -> Result<(), Value> {
+    println!("{}", "called!");
+    let docker_option: Option<Docker> = conn.0.lock().unwrap().deref().clone();
+    if docker_option.is_none() {
+        Err(json!({"error":"No docker connection!"}))
+    } else {
+        let docker = docker_option.unwrap();
+        let mut should_quit = false;
+        let attach_point = docker.attach_container(container_id, Some(AttachContainerOptions::<String>{
+            stdin: Some(true),
+            stdout: Some(true),
+            stderr: Some(true),
+            stream: Some(true),
+            logs: Some(true),
+            detach_keys: Some("ctrl-c".to_string()),
+        })).await;
+        match attach_point {
+            Ok(res) => {
+                let mut output = res.output;
+                let mut input = res.input;
+
+                let (tx, rx) = channel();
+                let ctx = Mutex::new(tx);
+                let listener = app_handle.listen_global(unique_id, move |event| {
+                    println!("{}", "hi");
+                    ctx.lock().unwrap().deref().send(event.clone().payload().unwrap().to_string()).unwrap();
+                });
+                for msg in rx.iter() {
+                    if msg.starts_with("END_TUNNEL|") {
+                        println!("{}", "quitting tunnel");
+                        should_quit = true
+                    } else {
+                        let mut send = msg.split("|").nth(1).unwrap().as_bytes();
+                        let _ = input.write_all_buf(&mut send);
+                    }
+                }
+
+                while let Some(data) = output.next().await {
+                    if should_quit {
+                        app_handle.unlisten(listener);
+                        break
+                    }
+                    println!("{}", "there was some data from output");
+                    if data.is_ok() {
+                        let data = data.unwrap();
+                        println!("{}", data);
+                        app_handle.emit_all(unique_id, data.to_string()).expect("TODO: panic message");
+                    }
+                }
+            },
+            Err(err) => {
+                return Err(check_docker_errors(err))
+            }
+        }
+        Ok(())
+    }
+}
+
+
+///
+/// Start a container
+///
+/// # Arguments
+/// * `conn` - The internal connection state
+/// * `container_id` - The ID of the container to start
+#[tauri::command]
+async fn start_docker_container(conn: State<'_, Connection>, container_id: &str) -> Result<(), Value> {
+    let docker_option: Option<Docker> = conn.0.lock().unwrap().deref().clone();
+    if docker_option.is_none() {
+        return Err(json!({"error":"No docker connection!"}))
+    }
+    let docker = docker_option.unwrap();
+    let req = docker.start_container(container_id, Some(StartContainerOptions {
+        detach_keys: "ctrl-^"
+    })).await;
+    match req {
+        Ok(()) => {
+            Ok(())
+        },
+        Err(err) => {
+            Err(check_docker_errors(err))
+        }
+    }
+}
+
+///
+/// Stop a container
+///
+/// # Arguments
+/// * `conn` - The internal connection state
+/// * `container_id` - The ID of the container to stop
+#[tauri::command]
+async fn stop_docker_container(conn: State<'_, Connection>, container_id: &str) -> Result<(), Value> {
+    let docker_option: Option<Docker> = conn.0.lock().unwrap().deref().clone();
+    if docker_option.is_none() {
+        return Err(json!({"error":"No docker connection!"}))
+    }
+    let docker = docker_option.unwrap();
+    match docker.stop_container(container_id, Some(StopContainerOptions {
+        t: 10
+    })).await {
+        Ok(()) => {
+            Ok(())
+        },
+        Err(err) => {
+            Err(check_docker_errors(err))
+        }
+    }
+}
+
+///
+/// Retart a container
+///
+/// # Arguments
+/// * `conn` - The internal connection state
+/// * `container_id` - The ID of the container to restart
+#[tauri::command]
+async fn restart_docker_container(conn: State<'_, Connection>, container_id: &str) -> Result<(), Value> {
+    let docker_option: Option<Docker> = conn.0.lock().unwrap().deref().clone();
+    if docker_option.is_none() {
+        return Err(json!({"error":"No docker connection!"}))
+    }
+    let docker = docker_option.unwrap();
+    match docker.restart_container(container_id, Some(RestartContainerOptions {
+        t: 10
+    })).await {
+        Ok(()) => {
+            Ok(())
+        },
+        Err(err) => {
+            Err(check_docker_errors(err))
+        }
+    }
+}
 /// Check bollard errors and convert then to JSON so they can be sent to the frontend
 ///
 /// # Arguments

@@ -23,6 +23,18 @@ export default class DockerContainersManager extends EventTarget {
             });
     }
 
+    /**
+     * Attach to a container
+     * @param containerId
+     * @param uniqueId
+     */
+    attachToContainers(containerId, uniqueId) {
+        return invoke("set_container_up_for_live_stdio", {
+            containerId: containerId,
+            uniqueId: uniqueId
+        })
+    }
+
     unload() {
         clearInterval(this.loop)
     }
@@ -57,6 +69,35 @@ export default class DockerContainersManager extends EventTarget {
             memoryLimit: ((creationDetails.memoryLimit*1024)*1024 || 0),
             command: creationDetails.command
         });
+    }
+
+    /**
+     * Get the details of a container
+     * @param containerId
+     */
+    getContainerDetails(containerId) {
+        return invoke("get_docker_container_details", {
+            containerId: containerId
+        })
+    }
+
+
+    startContainer(containerId) {
+        return invoke("start_docker_container", {
+            containerId: containerId
+        })
+    }
+
+    stopContainer(containerId) {
+        return invoke("stop_docker_container", {
+            containerId: containerId
+        })
+    }
+
+    restartContainer(containerId) {
+        return invoke("restart_docker_container", {
+            containerId: containerId
+        })
     }
 
     /**

@@ -52,6 +52,7 @@
     transition: 0.3s;
 }
 
+
 .delete-button:hover {
     border: 2px solid red;
 }

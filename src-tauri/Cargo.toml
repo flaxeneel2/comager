@@ -20,6 +20,7 @@ serde = { version = "1.0", features = ["derive"] }
 tauri = { version = "1.0.5", features = ["dialog"] }
 bollard = { version = "0.13.0", features = ["ssl"] }
 futures = "0.3.23"
+tokio = { version="1.20.1",features= ["io-util"] }
 
 [features]
 # by default Tauri runs in production mode
@@ -28,3 +29,11 @@ default = [ "custom-protocol" ]
 # this feature is used used for production builds where `devPath` points to the filesystem
 # DO NOT remove this
 custom-protocol = [ "tauri/custom-protocol" ]
+
+
+[profile.release]
+strip=true # strip debug symbols
+panic="abort" # Get rid of panic handler
+codegen-units=1 # Make the compiler package files 1 at a time, allowing for the optimization to be better
+lto=true # Enable link time optimization
+opt-level="s" # compiler level optimization

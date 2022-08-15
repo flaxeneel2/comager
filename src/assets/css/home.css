@@ -50,3 +50,8 @@
 .connect-button:hover {
     border: 2px solid #d1ff00;
 }
+
+.console {
+    background-color: #000000;
+    color: #ffffff;
+}
